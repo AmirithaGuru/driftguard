@@ -28,7 +28,7 @@ A guardrails-as-code platform for AWS that blocks risky Terraform changes at PR 
 
 ## 🔧 Tech Stack
 
-- **Infrastructure**: Terraform (AWS: IAM, S3, CloudTrail, Config, GuardDuty, Security Hub, Lambda, EventBridge, CloudWatch)
+- **Infrastructure**: Terraform (AWS: IAM, S3, CloudTrail, GuardDuty, Security Hub, Lambda, EventBridge, CloudWatch)
 - **CI/CD**: GitHub Actions with "security-checks" job
 - **Security**: Checkov, OPA/Rego (Conftest)
 - **Remediation**: Python (boto3)
