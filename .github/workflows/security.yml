@@ -1,0 +1,67 @@
+name: CI Security Checks
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - 'policy/**'
+      - '**/*.tf'
+permissions:
+  contents: read
+concurrency:
+  group: security-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  security-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install Checkov
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install checkov
+          checkov -v
+
+      - name: Install Conftest
+        run: |
+          set -euo pipefail
+          v=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep -oE '"tag_name":\s*"v[0-9.]+"' | cut -d\" -f4)
+          curl -L -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/${v}/conftest_${v#v}_Linux_x86_64.tar.gz"
+          tar xzf conftest.tar.gz
+          sudo mv conftest /usr/local/bin/
+          conftest --version
+
+      - name: Run Checkov (gate)
+        run: |
+          set -euo pipefail
+          checkov -d infra --output json --output-file checkov_report.json || true
+          CRIT=$(jq '[.results.failed_checks[]?.severity | select(.=="CRITICAL")] | length' checkov_report.json 2>/dev/null || echo 0)
+          HIGH=$(jq  '[.results.failed_checks[]?.severity | select(.=="HIGH")]     | length' checkov_report.json 2>/dev/null || echo 0)
+          echo "Critical=$CRIT High=$HIGH"
+          test "$CRIT" -eq 0 -a "$HIGH" -eq 0 || { echo "❌ High/Critical findings present"; exit 1; }
+
+      - name: Conftest (optional if plan.json exists)
+        if: ${{ hashFiles('infra/plan.json') != '' }}
+        run: conftest test infra/plan.json -p policy --data policy/exceptions.yaml
+
+      - name: Upload Checkov report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-report
+          path: checkov_report.json
+          retention-days: 30
