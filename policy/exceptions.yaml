@@ -1,0 +1,50 @@
+# DriftGuard Policy Exceptions
+# This file contains exceptions to policy violations that are temporarily allowed
+
+exceptions:
+  # Example: Temporary public S3 bucket for testing
+  - id: EX-001
+    owner: JohnDoe
+    reason: temporary test of public S3 bucket for demo purposes
+    expires: 2030-12-31T00:00:00Z
+    resource_id: aws_s3_bucket.demo
+    violation_type: s3_public_access
+
+  # Example: Development security group with SSH access
+  - id: EX-002
+    owner: JaneSmith
+    reason: development environment requires SSH access for debugging
+    expires: 2024-06-30T23:59:59Z
+    resource_id: aws_security_group_rule.dev_ssh
+    violation_type: security_group_dangerous_port
+
+  # Example: Legacy EBS volume without encryption
+  - id: EX-003
+    owner: BobWilson
+    reason: legacy EBS volume will be migrated to encrypted volume in Q2
+    expires: 2024-09-30T00:00:00Z
+    resource_id: aws_ebs_volume.legacy_data
+    violation_type: ebs_encryption
+
+  # Example: CloudTrail for specific use case
+  - id: EX-004
+    owner: AliceJohnson
+    reason: temporary CloudTrail configuration for migration testing
+    expires: 2024-03-15T00:00:00Z
+    resource_id: aws_cloudtrail.migration_trail
+    violation_type: cloudtrail_enabled
+
+  # Example: Admin IAM policy for emergency access
+  - id: EX-005
+    owner: CharlieBrown
+    reason: emergency admin policy for critical system maintenance
+    expires: 2024-02-28T23:59:59Z
+    resource_id: aws_iam_policy_document.emergency_admin
+    violation_type: iam_overly_permissive
+
+# Exception Types Reference:
+# - s3_public_access: S3 buckets without public access blocking
+# - security_group_dangerous_port: Security groups allowing dangerous ports from 0.0.0.0/0
+# - ebs_encryption: EBS volumes without encryption
+# - cloudtrail_enabled: CloudTrail trails that are disabled
+# - iam_overly_permissive: IAM policies with overly permissive statements
