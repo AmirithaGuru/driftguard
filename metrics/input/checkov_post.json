@@ -1,0 +1,14 @@
+{
+  "results": {
+    "failed_checks": [
+      {
+        "check_result": {
+          "result": {
+            "severity": "Medium"
+          },
+          "resource": "aws_iam_policy.test_policy"
+        }
+      }
+    ]
+  }
+}

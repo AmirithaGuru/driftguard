@@ -1,0 +1,22 @@
+{
+  "results": {
+    "failed_checks": [
+      {
+        "check_result": {
+          "result": {
+            "severity": "High"
+          },
+          "resource": "aws_s3_bucket.test_bucket"
+        }
+      },
+      {
+        "check_result": {
+          "result": {
+            "severity": "Critical"
+          },
+          "resource": "aws_security_group.test_sg"
+        }
+      }
+    ]
+  }
+}
