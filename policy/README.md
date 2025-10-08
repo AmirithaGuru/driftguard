@@ -52,32 +52,32 @@ exceptions:
 ## Policy Rules Summary
 
 ### S3 Public Access
-- ✅ S3 buckets must have public access blocked
-- ✅ All 4 public access block flags must be enabled
+- S3 buckets must have public access blocked
+- All 4 public access block flags must be enabled
 
 ### Security Groups
-- ❌ No 0.0.0.0/0 access on ports 22 (SSH) or 3389 (RDP)
-- ❌ No all-protocol access from 0.0.0.0/0
-- ❌ No IPv6 ::/0 access on dangerous ports
+- No 0.0.0.0/0 access on ports 22 (SSH) or 3389 (RDP)
+- No all-protocol access from 0.0.0.0/0
+- No IPv6 ::/0 access on dangerous ports
 
 ### Encryption
-- ✅ S3 buckets must have SSE-S3 or KMS encryption
-- ✅ EBS volumes and snapshots must be encrypted
-- ✅ RDS instances and clusters must be encrypted
-- ✅ DynamoDB tables must have server-side encryption
-- ✅ Lambda functions with environment variables must use KMS
+- S3 buckets must have SSE-S3 or KMS encryption
+- EBS volumes and snapshots must be encrypted
+- RDS instances and clusters must be encrypted
+- DynamoDB tables must have server-side encryption
+- Lambda functions with environment variables must use KMS
 
 ### CloudTrail
-- ✅ At least one CloudTrail trail must be enabled
-- ✅ Log file validation must be enabled
-- ✅ Global service events must be included
-- ✅ S3 bucket must be configured
-- ✅ CloudTrail S3 bucket must not be publicly accessible
+- At least one CloudTrail trail must be enabled
+- Log file validation must be enabled
+- Global service events must be included
+- S3 bucket must be configured
+- CloudTrail S3 bucket must not be publicly accessible
 
 ### IAM Policies
-- ❌ No IAM policies with Action:* and Resource:*
-- ❌ No dangerous managed policies (AdministratorAccess, PowerUserAccess, etc.)
-- ❌ No overly permissive inline policies
+- No IAM policies with Action:* and Resource:*
+- No dangerous managed policies (AdministratorAccess, PowerUserAccess, etc.)
+- No overly permissive inline policies
 
 ## Exception Types
 - `s3_public_access` - S3 buckets without public access blocking
@@ -150,4 +150,4 @@ These policies enforce the following security principles:
 
 ---
 
-*DriftGuard Policy-as-Code: Your Terraform security guardian* 🛡️
+**DriftGuard Policy-as-Code**: Automated Terraform security enforcement

@@ -1,10 +1,10 @@
-# 🛡️ DriftGuard: Policy-Gated IaC + Auto-Remediation
+# DriftGuard: Policy-Gated Infrastructure as Code with Automated Remediation
 
-**DriftGuard** is a guardrails-as-code platform for AWS that enforces security policies at two critical checkpoints: **pre-merge prevention** using OPA/Rego policies on `terraform plan` JSON to block risky infrastructure changes in CI, and **near real-time auto-remediation** via CloudTrail → EventBridge → Lambda to detect and fix manual drift within seconds. The platform emits structured JSON logs and custom CloudWatch metrics (MTTD, MTTR, prevention rates) and optionally publishes findings to Security Hub, giving teams both proactive gates and reactive guardrails with full observability.
+DriftGuard is a guardrails-as-code platform for AWS that enforces security policies at two critical checkpoints: pre-merge prevention using OPA/Rego policies on Terraform plan JSON to block risky infrastructure changes in CI/CD pipelines, and near real-time auto-remediation via CloudTrail, EventBridge, and Lambda to detect and correct manual drift within seconds. The platform emits structured JSON logs and custom CloudWatch metrics (MTTD, MTTR, prevention rates) and optionally publishes findings to Security Hub, providing teams with both proactive gates and reactive guardrails with full observability.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -18,7 +18,7 @@
 │                    │   (OPA/Rego: C1..C5 controls + exceptions.yaml)   │
 │                    ├─→ checkov -d infra --compact                       │
 │                    │                                                     │
-│                    └─→ ✅ PASS → Merge  |  ❌ FAIL → Block PR           │
+│                    └─→ PASS → Merge  |  FAIL → Block PR                │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -57,7 +57,7 @@
 
 ---
 
-## 🔒 Enforced Security Controls
+## Enforced Security Controls
 
 DriftGuard implements **five critical security controls** validated in CI and enforced at runtime:
 
@@ -73,7 +73,7 @@ DriftGuard implements **five critical security controls** validated in CI and en
 
 ---
 
-## 🤖 Automated Remediation Playbooks
+## Automated Remediation Playbooks
 
 DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by CloudTrail events:
 
@@ -102,7 +102,7 @@ DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by Cl
 
 ---
 
-## 📊 Current Performance Metrics
+## Current Performance Metrics
 
 | KPI | Value |
 |-----|-------|
@@ -125,7 +125,7 @@ DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by Cl
 
 ---
 
-## 🎬 How to Demo
+## Demonstration Guide
 
 ### Prerequisites
 
@@ -164,7 +164,7 @@ resource "aws_security_group" "demo_bad" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ VIOLATION: C2 control
+    cidr_blocks = ["0.0.0.0/0"]  # VIOLATION: C2 control
   }
 
   tags = var.default_tags
@@ -294,7 +294,7 @@ aws s3api put-bucket-policy \
   --bucket "$TEST_BUCKET" \
   --policy file:///tmp/public-policy.json
 
-# ⏱️ WATCH: DriftGuard should remediate in ~30-60 seconds
+# WATCH: DriftGuard should remediate in approximately 30-60 seconds
 
 # Monitor Lambda logs in real-time
 aws logs tail /aws/lambda/driftguard-remediator \
@@ -339,7 +339,7 @@ aws ec2 authorize-security-group-ingress \
   --port 22 \
   --cidr 0.0.0.0/0
 
-# ⏱️ WATCH: DriftGuard should remediate in ~30-60 seconds
+# WATCH: DriftGuard should remediate in approximately 30-60 seconds
 
 # Monitor logs
 aws logs tail /aws/lambda/driftguard-remediator \
@@ -395,7 +395,7 @@ aws securityhub get-findings \
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 driftguard/
@@ -439,7 +439,7 @@ driftguard/
 
 ---
 
-## ⚠️ Safety and Cost Considerations
+## Safety and Cost Considerations
 
 ### Sandbox-Only Deployment
 
@@ -503,7 +503,7 @@ aws events enable-rule --name driftguard-remediation-trigger
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone and Setup
 
@@ -575,7 +575,7 @@ cat metrics.md
 
 ---
 
-## 📚 Further Reading
+## Further Reading
 
 - **Policy Development**: See `policy/README.md` for writing custom Rego rules and testing
 - **Simulation Playbooks**: See `sim/PR-cases.md` and `sim/drift-cases.md` for comprehensive test scenarios
@@ -585,7 +585,7 @@ cat metrics.md
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 DriftGuard is a reference implementation for guardrails-as-code patterns. Contributions welcome:
 
@@ -596,13 +596,13 @@ DriftGuard is a reference implementation for guardrails-as-code patterns. Contri
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with:
 - **Terraform** for infrastructure as code
@@ -614,7 +614,3 @@ Built with:
 - **Python 3.11** and **Boto3** for AWS SDK integration
 
 Inspired by AWS Well-Architected Security Pillar and DevSecOps best practices.
-
----
-
-**Built with ❤️ for secure, automated AWS infrastructure management.**

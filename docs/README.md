@@ -10,10 +10,10 @@ The following screenshots should be captured during demo runs:
 **Capture**: GitHub Actions CI workflow showing a failed security check
 
 **What to show**:
-- Red ❌ status on PR
+- Failed status indicator on pull request
 - Conftest output showing policy violation (e.g., "Security Group allows 0.0.0.0/0 on port 22")
 - Checkov findings highlighting High/Critical issues
-- PR merge blocked by required status check
+- Pull request merge blocked by required status check
 
 **How to capture**:
 1. Create a branch with a risky Terraform change (e.g., open security group)
@@ -27,10 +27,10 @@ The following screenshots should be captured during demo runs:
 **Capture**: GitHub Actions CI workflow showing a passing check with policy exception
 
 **What to show**:
-- Green ✅ status on PR
+- Passing status indicator on pull request
 - Conftest output mentioning exception ID (e.g., "EX-DEMO-001")
 - Warning message about time-boxed waiver
-- PR allowed to merge with exception noted
+- Pull request allowed to merge with exception noted
 
 **How to capture**:
 1. Add an exception to `policy/exceptions.yaml`
@@ -131,4 +131,4 @@ These can be created using tools like:
 
 ---
 
-**Note**: All screenshots should be captured in a **sandbox AWS account** with no sensitive data visible (account IDs, resource names, etc. can be sanitized if needed).
+**Note**: All screenshots should be captured in a sandbox AWS account with no sensitive data visible. Account IDs, resource names, and other identifying information can be sanitized if needed.
