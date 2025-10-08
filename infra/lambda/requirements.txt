@@ -1,0 +1,8 @@
+# DriftGuard Lambda Dependencies
+# 
+# Note: Lambda runtime includes boto3 by default, so this file is empty for now.
+# Add external dependencies here as needed in the future.
+#
+# Example future dependencies:
+# requests==2.31.0
+# cryptography==41.0.4
