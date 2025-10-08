@@ -1,4 +1,4 @@
-# DriftGuard: Policy-Gated Infrastructure as Code with Automated Remediation
+# DriftGuard: Policy-Gated IaC + Auto-Remediation
 
 DriftGuard is a guardrails-as-code platform for AWS that enforces security policies at two critical checkpoints: pre-merge prevention using OPA/Rego policies on Terraform plan JSON to block risky infrastructure changes in CI/CD pipelines, and near real-time auto-remediation via CloudTrail, EventBridge, and Lambda to detect and correct manual drift within seconds. The platform emits structured JSON logs and custom CloudWatch metrics (MTTD, MTTR, prevention rates) and optionally publishes findings to Security Hub, providing teams with both proactive gates and reactive guardrails with full observability.
 
