@@ -1,4 +1,4 @@
-# 🎉 DriftGuard Project Complete
+# DriftGuard Project Complete
 
 ## Overview
 
@@ -9,16 +9,16 @@
 
 ---
 
-## ✅ Completed Steps
+## Completed Steps
 
 ### Step 1: Infrastructure Monitoring
 **Deliverable**: Core AWS security services deployed via Terraform
 
-- ✅ CloudTrail for management event capture (multi-region, log validation enabled)
-- ✅ GuardDuty for continuous threat detection
-- ✅ Security Hub for centralized findings aggregation
-- ✅ S3 bucket for logs (encrypted, versioned, public access blocked)
-- ✅ IAM roles with least-privilege policies
+- [x] CloudTrail for management event capture (multi-region, log validation enabled)
+- [x] GuardDuty for continuous threat detection
+- [x] Security Hub for centralized findings aggregation
+- [x] S3 bucket for logs (encrypted, versioned, public access blocked)
+- [x] IAM roles with least-privilege policies
 
 **Status**: Deployed and operational
 
@@ -27,11 +27,11 @@
 ### Step 2: Policy-as-Code Layer
 **Deliverable**: OPA/Rego policies enforcing 5 critical security controls
 
-- ✅ **C1: S3 Public Access Block** - All 4 PAB flags required
-- ✅ **C2: Security Group Ingress** - No 0.0.0.0/0 on ports 22/3389 or protocol -1
-- ✅ **C3: Encryption at Rest** - KMS encryption for S3/EBS/RDS
-- ✅ **C4: CloudTrail Baseline** - Multi-region trail with secure log bucket
-- ✅ **C5: IAM Least-Privilege** - No Action:*/Resource:* wildcards on admin APIs
+- [x] **C1: S3 Public Access Block** - All 4 PAB flags required
+- [x] **C2: Security Group Ingress** - No 0.0.0.0/0 on ports 22/3389 or protocol -1
+- [x] **C3: Encryption at Rest** - KMS encryption for S3/EBS/RDS
+- [x] **C4: CloudTrail Baseline** - Multi-region trail with secure log bucket
+- [x] **C5: IAM Least-Privilege** - No Action:*/Resource:* wildcards on admin APIs
 
 **Features**:
 - Time-boxed exceptions via `policy/exceptions.yaml`
@@ -45,11 +45,11 @@
 ### Step 3: CI Security Gate
 **Deliverable**: GitHub Actions workflow for automated policy enforcement
 
-- ✅ `.github/workflows/security.yml` workflow file
-- ✅ Checkov static analysis for IaC misconfigurations
-- ✅ Conftest policy validation against Rego rules
-- ✅ Path filtering (only run on `infra/**` or `policy/**` changes)
-- ✅ Blocking behavior: fail PR if High/Critical findings exist
+- [x] `.github/workflows/security.yml` workflow file
+- [x] Checkov static analysis for IaC misconfigurations
+- [x] Conftest policy validation against Rego rules
+- [x] Path filtering (only run on `infra/**` or `policy/**` changes)
+- [x] Blocking behavior: fail PR if High/Critical findings exist
 
 **Integration**:
 - Triggered on `pull_request` events
@@ -64,20 +64,20 @@
 **Deliverable**: CloudTrail → EventBridge → Lambda pipeline for drift detection and correction
 
 **Components**:
-- ✅ EventBridge rule listening for 6 high-risk CloudTrail events:
+- [x] EventBridge rule listening for 6 high-risk CloudTrail events:
   - `PutBucketAcl`, `PutBucketPolicy`, `DeleteBucketPolicy`
   - `PutPublicAccessBlock`, `DeletePublicAccessBlock`
   - `AuthorizeSecurityGroupIngress`
 
-- ✅ Lambda function (`remediator.py`) with idempotent playbooks:
+- [x] Lambda function (`remediator.py`) with idempotent playbooks:
   - **S3 Playbook**: Enable PAB, sanitize bucket policy, tag bucket
   - **SG Playbook**: Revoke 0.0.0.0/0 rules, add maintainer CIDR, tag SG
 
-- ✅ IAM role with least-privilege permissions (S3, S3Control, EC2, Logs, Metrics, SecurityHub)
+- [x] IAM role with least-privilege permissions (S3, S3Control, EC2, Logs, Metrics, SecurityHub)
 
-- ✅ CloudWatch Logs with structured JSON output for parsing
-- ✅ Custom metrics: `RemediationSuccess`, `RemediationFailure`, `RemediationLatencyMs`
-- ✅ Optional Security Hub findings publication
+- [x] CloudWatch Logs with structured JSON output for parsing
+- [x] Custom metrics: `RemediationSuccess`, `RemediationFailure`, `RemediationLatencyMs`
+- [x] Optional Security Hub findings publication
 
 **Performance**:
 - MTTD p95: ~45 seconds
@@ -92,14 +92,14 @@
 **Deliverable**: Comprehensive test scenarios for validation
 
 **Files**:
-- ✅ `sim/PR-cases.md` (1,001 lines):
+- [x] `sim/PR-cases.md` (1,001 lines):
   - 20+ BAD PR snippets (one violation each, grouped by C1-C5)
   - 10+ GOOD PR examples (compliant configurations)
   - 3 EXCEPTION cases with `exceptions.yaml` integration
   - Complete runbook with local and CI testing procedures
   - Expected CI outcomes and fix hints for each case
 
-- ✅ `sim/drift-cases.md` (658 lines):
+- [x] `sim/drift-cases.md` (658 lines):
   - S3 drift drills (ACL and Policy variants)
   - Security Group drift drills (IPv4 and IPv6)
   - Timestamp tables for MTTD/MTTR measurement
@@ -120,7 +120,7 @@
 **Deliverable**: Python tool for KPI analysis and trend tracking
 
 **Features**:
-- ✅ `metrics/collect.py` (647 lines):
+- [x] `metrics/collect.py` (647 lines):
   - CI performance analysis (prevention rate, false positives, overhead)
   - Drift metrics computation (MTTD/MTTR p50/p95)
   - Security density tracking (Checkov baseline vs post-gate)
@@ -156,7 +156,7 @@
 **Deliverable**: Comprehensive README and screenshot guides
 
 **Files**:
-- ✅ `README.md` (728 lines):
+- [x] `README.md` (728 lines):
   - Project summary and value proposition
   - ASCII architecture diagram (3-layer: Prevention, Remediation, Observability)
   - Detailed security controls (C1-C5)
@@ -170,7 +170,7 @@
   - Repository structure and quick start guide
   - Cleanup and rollback procedures
 
-- ✅ `docs/README.md`:
+- [x] `docs/README.md`:
   - Screenshot capture instructions for 5 demo scenarios
   - Placeholder structure for documentation assets
 
@@ -185,7 +185,7 @@
 
 ---
 
-## 📊 Repository Statistics
+## Repository Statistics
 
 ```
 Total Files:        50+
@@ -200,7 +200,7 @@ Drift Drills:       4 (S3 ACL, S3 Policy, SG IPv4, SG IPv6)
 
 ---
 
-## 🎯 Key Achievements
+## Key Achievements
 
 1. **Zero Trust Infrastructure**: Every change validated before merge, every drift remediated automatically
 2. **Sub-60-Second MTTR**: Median time from detection to remediation under 1 minute
@@ -213,24 +213,24 @@ Drift Drills:       4 (S3 ACL, S3 Policy, SG IPv4, SG IPv6)
 
 ---
 
-## 🚀 Deployment Readiness
+## Deployment Readiness
 
 ### Prerequisites Met
-- ✅ AWS account with admin access (sandbox recommended)
-- ✅ Terraform 1.x installed
-- ✅ Conftest CLI installed
-- ✅ Python 3.11+ installed
-- ✅ aws-vault or AWS CLI credentials configured
+- [x] AWS account with admin access (sandbox recommended)
+- [x] Terraform 1.x installed
+- [x] Conftest CLI installed
+- [x] Python 3.11+ installed
+- [x] aws-vault or AWS CLI credentials configured
 
 ### Deployment Checklist
-- ✅ Infrastructure code (`infra/main.tf`)
-- ✅ Lambda package (`infra/lambda/remediator.py`)
-- ✅ Makefile automation (`infra/Makefile`)
-- ✅ Policy definitions (`policy/*.rego`)
-- ✅ CI workflow (`.github/workflows/security.yml`)
-- ✅ Simulation scripts (`sim/*.md`, `infra/scripts/*.sh`)
-- ✅ Metrics collector (`metrics/collect.py`)
-- ✅ Documentation (`README.md`, `docs/README.md`)
+- [x] Infrastructure code (`infra/main.tf`)
+- [x] Lambda package (`infra/lambda/remediator.py`)
+- [x] Makefile automation (`infra/Makefile`)
+- [x] Policy definitions (`policy/*.rego`)
+- [x] CI workflow (`.github/workflows/security.yml`)
+- [x] Simulation scripts (`sim/*.md`, `infra/scripts/*.sh`)
+- [x] Metrics collector (`metrics/collect.py`)
+- [x] Documentation (`README.md`, `docs/README.md`)
 
 ### One-Command Deploy
 ```bash
@@ -240,7 +240,7 @@ aws-vault exec driftguard -- make lambda-package && make apply-core
 
 ---
 
-## 📈 Next Steps (Optional Enhancements)
+## Next Steps (Optional Enhancements)
 
 ### Short-Term (1-2 weeks)
 - [ ] Capture demo screenshots for `docs/` directory
@@ -265,20 +265,20 @@ aws-vault exec driftguard -- make lambda-package && make apply-core
 
 ---
 
-## 🏆 Success Criteria (All Met)
+## Success Criteria (All Met)
 
-- ✅ **Preventive Controls**: Bad PRs blocked before merge
-- ✅ **Detective Controls**: CloudTrail events trigger Lambda within seconds
-- ✅ **Corrective Controls**: Remediation playbooks restore secure state automatically
-- ✅ **Auditability**: All actions logged with timestamps, resource IDs, and outcomes
-- ✅ **Measurability**: KPIs tracked and reported (prevention rate, MTTD, MTTR, density)
-- ✅ **Maintainability**: Code is modular, documented, and testable
-- ✅ **Cost-Effectiveness**: Total cost < $10/month for low-traffic environments
-- ✅ **Safety**: Sandbox-tested, rollback procedures documented
+- [x] **Preventive Controls**: Bad PRs blocked before merge
+- [x] **Detective Controls**: CloudTrail events trigger Lambda within seconds
+- [x] **Corrective Controls**: Remediation playbooks restore secure state automatically
+- [x] **Auditability**: All actions logged with timestamps, resource IDs, and outcomes
+- [x] **Measurability**: KPIs tracked and reported (prevention rate, MTTD, MTTR, density)
+- [x] **Maintainability**: Code is modular, documented, and testable
+- [x] **Cost-Effectiveness**: Total cost < $10/month for low-traffic environments
+- [x] **Safety**: Sandbox-tested, rollback procedures documented
 
 ---
 
-## 🎓 Learning Outcomes
+## Learning Outcomes
 
 This project demonstrates proficiency in:
 - **Infrastructure as Code**: Terraform for multi-service AWS deployments
@@ -291,7 +291,7 @@ This project demonstrates proficiency in:
 
 ---
 
-## 📞 Contact & Support
+## Contact & Support
 
 - **GitHub Repository**: https://github.com/AmirithaGuru/driftguard
 - **Issues/Questions**: Open a GitHub issue
@@ -299,4 +299,4 @@ This project demonstrates proficiency in:
 
 ---
 
-**DriftGuard is now complete and ready for production deployment in sandbox environments. All 7 steps delivered with comprehensive documentation, testing, and observability.** 🎉
+**DriftGuard is now complete and ready for production deployment in sandbox environments. All 7 steps delivered with comprehensive documentation, testing, and observability.**

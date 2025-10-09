@@ -7,52 +7,93 @@ DriftGuard is a guardrails-as-code platform for AWS that enforces security polic
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  PREVENTION (Pre-Merge)                                                 │
-│                                                                          │
-│  Developer → PR → GitHub Actions CI                                     │
-│                    │                                                     │
-│                    ├─→ terraform plan -out=plan.bin                     │
-│                    ├─→ terraform show -json plan.bin > plan.json       │
-│                    ├─→ conftest test plan.json -p policy/              │
-│                    │   (OPA/Rego: C1..C5 controls + exceptions.yaml)   │
-│                    ├─→ checkov -d infra --compact                       │
-│                    │                                                     │
-│                    └─→ PASS → Merge  |  FAIL → Block PR                │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         LAYER 1: PREVENTION (Pre-Merge)                   │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   Developer  ──>  Pull Request  ──>  GitHub Actions CI                   │
+│                                            │                              │
+│                                            ├──> terraform plan            │
+│                                            │                              │
+│                                            ├──> terraform show -json      │
+│                                            │                              │
+│                                            ├──> conftest test             │
+│                                            │    (OPA/Rego policies)       │
+│                                            │    • C1: S3 PAB              │
+│                                            │    • C2: SG Ingress          │
+│                                            │    • C3: KMS Encryption      │
+│                                            │    • C4: CloudTrail          │
+│                                            │    • C5: IAM Least-Privilege │
+│                                            │                              │
+│                                            ├──> checkov scan              │
+│                                            │                              │
+│                                            ▼                              │
+│                                   ┌────────────────┐                     │
+│                                   │  PASS → Merge  │                     │
+│                                   │  FAIL → Block  │                     │
+│                                   └────────────────┘                     │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  AUTO-REMEDIATION (Post-Deployment Drift)                               │
-│                                                                          │
-│  Manual Console Change → CloudTrail (Management Events)                 │
-│           │                                                              │
-│           └─→ EventBridge Rule                                          │
-│                (PutBucketAcl, PutBucketPolicy, AuthorizeSecurityGroup*) │
-│                    │                                                     │
-│                    └─→ Lambda (Python 3.11 remediator)                  │
-│                         ├─→ S3 Playbook:                                │
-│                         │    - Enable Public Access Block (all 4 flags) │
-│                         │    - Sanitize bucket policy (remove public)   │
-│                         │    - Tag: driftguard:remediated=true          │
-│                         │                                                │
-│                         ├─→ SG Playbook:                                │
-│                         │    - Revoke 0.0.0.0/0 on ports 22/3389        │
-│                         │    - Add maintainer /32 CIDR                  │
-│                         │    - Tag: driftguard:quarantined=true         │
-│                         │                                                │
-│                         ├─→ CloudWatch Logs (structured JSON)           │
-│                         ├─→ CloudWatch Metrics (MTTD, MTTR, Success)    │
-│                         └─→ Security Hub (optional findings)            │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│              LAYER 2: AUTO-REMEDIATION (Post-Deployment Drift)            │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   Manual AWS Console Change                                              │
+│              │                                                            │
+│              ▼                                                            │
+│        CloudTrail (Management Events)                                    │
+│              │                                                            │
+│              │  Event Names:                                             │
+│              │  • PutBucketAcl                                           │
+│              │  • PutBucketPolicy                                        │
+│              │  • DeleteBucketPolicy                                     │
+│              │  • PutPublicAccessBlock                                   │
+│              │  • DeletePublicAccessBlock                                │
+│              │  • AuthorizeSecurityGroupIngress                          │
+│              │                                                            │
+│              ▼                                                            │
+│        EventBridge Rule  ──>  Lambda Function (Python 3.11)              │
+│                                     │                                     │
+│                    ┌────────────────┴────────────────┐                   │
+│                    │                                 │                   │
+│                    ▼                                 ▼                   │
+│              S3 Playbook                       SG Playbook               │
+│              ├─ Enable PAB (4 flags)           ├─ Revoke 0.0.0.0/0      │
+│              ├─ Sanitize policy                ├─ Add maintainer CIDR    │
+│              └─ Tag: remediated=true           └─ Tag: quarantined=true  │
+│                    │                                 │                   │
+│                    └────────────────┬────────────────┘                   │
+│                                     │                                     │
+│                                     ▼                                     │
+│                         ┌───────────────────────┐                        │
+│                         │  Emit Logs & Metrics  │                        │
+│                         └───────────────────────┘                        │
+│                                     │                                     │
+│                    ┌────────────────┼────────────────┐                   │
+│                    │                │                │                   │
+│                    ▼                ▼                ▼                   │
+│            CloudWatch Logs   CloudWatch Metrics  Security Hub            │
+│            (Structured JSON)  (MTTD, MTTR)       (Findings)              │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  OBSERVABILITY                                                           │
-│                                                                          │
-│  CloudWatch Logs Insights → Query structured JSON logs                  │
-│  CloudWatch Metrics → RemediationSuccess, RemediationLatencyMs          │
-│  Security Hub → Aggregated findings dashboard                           │
-│  /metrics/collect.py → KPI reports (prevention rate, MTTD/MTTR p50/p95) │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                       LAYER 3: OBSERVABILITY & REPORTING                  │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   CloudWatch Logs Insights  ──>  Query structured JSON logs              │
+│                                                                           │
+│   CloudWatch Metrics        ──>  RemediationSuccess                      │
+│                                   RemediationFailure                      │
+│                                   RemediationLatencyMs                    │
+│                                                                           │
+│   Security Hub              ──>  Aggregated findings dashboard           │
+│                                                                           │
+│   metrics/collect.py        ──>  KPI reports (Prevention Rate,           │
+│                                   False Positives, MTTD/MTTR p50/p95)    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

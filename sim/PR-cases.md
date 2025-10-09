@@ -59,10 +59,10 @@ resource "aws_s3_bucket" "test_bucket" {
 resource "aws_s3_bucket_public_access_block" "test_bucket" {
   bucket = aws_s3_bucket.test_bucket.id
   
-  block_public_acls       = false  # ❌ Should be true
-  block_public_policy     = false  # ❌ Should be true
-  ignore_public_acls      = false  # ❌ Should be true
-  restrict_public_buckets = false  # ❌ Should be true
+  block_public_acls       = false  # FAIL: Should be true
+  block_public_policy     = false  # FAIL: Should be true
+  ignore_public_acls      = false  # FAIL: Should be true
+  restrict_public_buckets = false  # FAIL: Should be true
 }
 ```
 
@@ -86,7 +86,7 @@ resource "aws_s3_bucket_policy" "test_bucket" {
     Statement = [
       {
         Effect = "Allow"
-        Principal = "*"  # ❌ Public access
+        Principal = "*"  # FAIL: Public access
         Action = "s3:GetObject"
         Resource = "${aws_s3_bucket.test_bucket.arn}/*"
       }
@@ -109,7 +109,7 @@ resource "aws_s3_bucket" "test_bucket" {
 
 resource "aws_s3_bucket_acl" "test_bucket" {
   bucket = aws_s3_bucket.test_bucket.id
-  acl    = "public-read"  # ❌ Public ACL
+  acl    = "public-read"  # FAIL: Public ACL
 }
 ```
 
@@ -169,7 +169,7 @@ resource "aws_security_group" "test_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ Open to world
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: Open to world
   }
 }
 ```
@@ -189,7 +189,7 @@ resource "aws_security_group" "test_sg" {
     from_port   = 3389
     to_port     = 3389
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ Open to world
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: Open to world
   }
 }
 ```
@@ -208,8 +208,8 @@ resource "aws_security_group" "test_sg" {
   ingress {
     from_port   = 0
     to_port     = 65535
-    protocol    = "-1"  # ❌ All protocols
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ From anywhere
+    protocol    = "-1"  # FAIL: All protocols
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: From anywhere
   }
 }
 ```
@@ -229,7 +229,7 @@ resource "aws_security_group" "test_sg" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    ipv6_cidr_blocks = ["::/0"]  # ❌ Open to all IPv6
+    ipv6_cidr_blocks = ["::/0"]  # FAIL: Open to all IPv6
   }
 }
 ```
@@ -249,14 +249,14 @@ resource "aws_security_group" "test_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ SSH open
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: SSH open
   }
   
   ingress {
     from_port   = 3389
     to_port     = 3389
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ RDP open
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: RDP open
   }
 }
 ```
@@ -282,7 +282,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test_bucket" {
   
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"  # ❌ Should be aws:kms
+      sse_algorithm = "AES256"  # FAIL: Should be aws:kms
     }
   }
 }
@@ -299,7 +299,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test_bucket" {
 resource "aws_ebs_volume" "test_volume" {
   availability_zone = "us-east-1a"
   size              = 10
-  encrypted         = false  # ❌ Should be true
+  encrypted         = false  # FAIL: Should be true
 }
 ```
 
@@ -317,7 +317,7 @@ resource "aws_db_instance" "test_db" {
   instance_class = "db.t3.micro"
   allocated_storage = 20
   
-  storage_encrypted = false  # ❌ Should be true
+  storage_encrypted = false  # FAIL: Should be true
 }
 ```
 
@@ -368,7 +368,7 @@ resource "aws_cloudtrail" "test_trail" {
   name           = "test-trail"
   s3_bucket_name = aws_s3_bucket.logs.bucket
   
-  is_multi_region_trail = false  # ❌ Should be true
+  is_multi_region_trail = false  # FAIL: Should be true
 }
 ```
 
@@ -387,10 +387,10 @@ resource "aws_s3_bucket" "cloudtrail_logs" {
 resource "aws_s3_bucket_public_access_block" "cloudtrail_logs" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
   
-  block_public_acls       = false  # ❌ Should be true
-  block_public_policy     = false  # ❌ Should be true
-  ignore_public_acls      = false  # ❌ Should be true
-  restrict_public_buckets = false  # ❌ Should be true
+  block_public_acls       = false  # FAIL: Should be true
+  block_public_policy     = false  # FAIL: Should be true
+  ignore_public_acls      = false  # FAIL: Should be true
+  restrict_public_buckets = false  # FAIL: Should be true
 }
 ```
 
@@ -421,7 +421,7 @@ resource "aws_cloudtrail" "test_trail" {
   s3_bucket_name = aws_s3_bucket.logs.bucket
   
   is_multi_region_trail = true
-  enable_logging        = false  # ❌ Should be true
+  enable_logging        = false  # FAIL: Should be true
 }
 ```
 
@@ -445,7 +445,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs" {
     Statement = [
       {
         Effect = "Allow"
-        Principal = "*"  # ❌ Public access to logs
+        Principal = "*"  # FAIL: Public access to logs
         Action = "s3:GetObject"
         Resource = "${aws_s3_bucket.cloudtrail_logs.arn}/*"
       }
@@ -474,8 +474,8 @@ resource "aws_iam_policy" "test_policy" {
     Statement = [
       {
         Effect = "Allow"
-        Action = "*"      # ❌ Wildcard action
-        Resource = "*"    # ❌ Wildcard resource
+        Action = "*"      # FAIL: Wildcard action
+        Resource = "*"    # FAIL: Wildcard resource
       }
     ]
   })
@@ -499,11 +499,11 @@ resource "aws_iam_policy" "test_policy" {
       {
         Effect = "Allow"
         Action = [
-          "iam:*",        # ❌ Admin namespace
-          "kms:*",        # ❌ Admin namespace
-          "sts:*"         # ❌ Admin namespace
+          "iam:*",        # FAIL: Admin namespace
+          "kms:*",        # FAIL: Admin namespace
+          "sts:*"         # FAIL: Admin namespace
         ]
-        Resource = "*"    # ❌ Wildcard resource
+        Resource = "*"    # FAIL: Wildcard resource
       }
     ]
   })
@@ -526,8 +526,8 @@ resource "aws_iam_policy" "test_policy" {
     Statement = [
       {
         Effect = "Allow"
-        Action = "ec2:*"     # ❌ Full EC2 access
-        Resource = "*"       # ❌ All resources
+        Action = "ec2:*"     # FAIL: Full EC2 access
+        Resource = "*"       # FAIL: All resources
       }
     ]
   })
@@ -550,8 +550,8 @@ resource "aws_iam_policy" "test_policy" {
     Statement = [
       {
         Effect = "Allow"
-        Action = "s3:*"      # ❌ Full S3 access
-        Resource = "*"       # ❌ All resources
+        Action = "s3:*"      # FAIL: Full S3 access
+        Resource = "*"       # FAIL: All resources
       }
     ]
   })
@@ -658,7 +658,7 @@ resource "aws_security_group" "test_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["203.0.113.0/24"]  # ✅ Office network
+    cidr_blocks = ["203.0.113.0/24"]  # PASS: Office network
   }
 }
 ```
@@ -676,7 +676,7 @@ resource "aws_security_group" "test_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ✅ HTTPS is acceptable
+    cidr_blocks = ["0.0.0.0/0"]  # PASS: HTTPS is acceptable
   }
 }
 ```
@@ -855,10 +855,10 @@ resource "aws_s3_bucket" "migration_bucket" {
 resource "aws_s3_bucket_public_access_block" "migration_bucket" {
   bucket = aws_s3_bucket.migration_bucket.id
   
-  block_public_acls       = false  # ❌ Would normally fail
-  block_public_policy     = false  # ❌ Would normally fail
-  ignore_public_acls      = false  # ❌ Would normally fail
-  restrict_public_buckets = false  # ❌ Would normally fail
+  block_public_acls       = false  # FAIL: Would normally fail
+  block_public_policy     = false  # FAIL: Would normally fail
+  ignore_public_acls      = false  # FAIL: Would normally fail
+  restrict_public_buckets = false  # FAIL: Would normally fail
 }
 ```
 
@@ -890,7 +890,7 @@ resource "aws_security_group" "incident_response" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ Would normally fail
+    cidr_blocks = ["0.0.0.0/0"]  # FAIL: Would normally fail
   }
 }
 ```
@@ -922,8 +922,8 @@ resource "aws_iam_policy" "dev_admin_policy" {
     Statement = [
       {
         Effect = "Allow"
-        Action = "*"      # ❌ Would normally fail
-        Resource = "*"    # ❌ Would normally fail
+        Action = "*"      # FAIL: Would normally fail
+        Resource = "*"    # FAIL: Would normally fail
       }
     ]
   })

@@ -4,7 +4,7 @@
 This document provides hands-on drift simulation scenarios to measure DriftGuard's auto-remediation performance. These drills help validate detection latency, invoke latency, remediation latency, and end-to-end MTTR (Mean Time To Remediation).
 
 ## Safety Notice
-⚠️ **IMPORTANT**: Use **TEST** buckets and security groups only. Never run these drills against production resources. Always clean up test resources after verification.
+**IMPORTANT**: Use TEST buckets and security groups only. Never run these drills against production resources. Always clean up test resources after verification.
 
 ---
 
@@ -18,14 +18,14 @@ This document provides hands-on drift simulation scenarios to measure DriftGuard
 - CloudWatch Logs access
 
 #### Step Checklist
-- ☐ Create test S3 bucket with unique name
-- ☐ Verify bucket is initially private
-- ☐ Make bucket public via ACL (t0)
-- ☐ Monitor CloudWatch logs for EventBridge trigger (t1)
-- ☐ Watch Lambda execution logs (t2)
-- ☐ Confirm remediation completion (t3)
-- ☐ Verify bucket is secured
-- ☐ Clean up test resources
+- [ ] Create test S3 bucket with unique name
+- [ ] Verify bucket is initially private
+- [ ] Make bucket public via ACL (t0)
+- [ ] Monitor CloudWatch logs for EventBridge trigger (t1)
+- [ ] Watch Lambda execution logs (t2)
+- [ ] Confirm remediation completion (t3)
+- [ ] Verify bucket is secured
+- [ ] Clean up test resources
 
 #### Execution Steps
 
@@ -80,10 +80,10 @@ aws logs tail /aws/lambda/driftguard-remediator-8cb448d0 --since 5m --follow
 | **MTTR** | | t3 - t0 |
 
 #### Verification Checklist
-- ☐ Public ACL removed or bucket made private
-- ☐ Public Access Block enabled on bucket
-- ☐ Bucket tagged with `driftguard:remediated=true`
-- ☐ No public access possible
+- [ ] Public ACL removed or bucket made private
+- [ ] Public Access Block enabled on bucket
+- [ ] Bucket tagged with `driftguard:remediated=true`
+- [ ] No public access possible
 
 **Verification Commands:**
 ```bash
@@ -119,14 +119,14 @@ aws s3api delete-bucket --bucket $BUCKET_NAME
 ### S3 Drift Drill 2: Public Access via Bucket Policy
 
 #### Step Checklist
-- ☐ Create test S3 bucket with unique name
-- ☐ Disable Public Access Block (required for policy)
-- ☐ Apply public bucket policy (t0)
-- ☐ Monitor CloudWatch logs for EventBridge trigger (t1)
-- ☐ Watch Lambda execution logs (t2)
-- ☐ Confirm remediation completion (t3)
-- ☐ Verify bucket is secured
-- ☐ Clean up test resources
+- [ ] Create test S3 bucket with unique name
+- [ ] Disable Public Access Block (required for policy)
+- [ ] Apply public bucket policy (t0)
+- [ ] Monitor CloudWatch logs for EventBridge trigger (t1)
+- [ ] Watch Lambda execution logs (t2)
+- [ ] Confirm remediation completion (t3)
+- [ ] Verify bucket is secured
+- [ ] Clean up test resources
 
 #### Execution Steps
 
@@ -199,10 +199,10 @@ aws logs tail /aws/lambda/driftguard-remediator-8cb448d0 --since 5m --follow
 | **MTTR** | | t3 - t0 |
 
 #### Verification Checklist
-- ☐ Public bucket policy removed
-- ☐ Public Access Block re-enabled on bucket
-- ☐ Bucket tagged with `driftguard:remediated=true`
-- ☐ No public access possible
+- [ ] Public bucket policy removed
+- [ ] Public Access Block re-enabled on bucket
+- [ ] Bucket tagged with `driftguard:remediated=true`
+- [ ] No public access possible
 
 **Verification Commands:**
 ```bash
@@ -240,13 +240,13 @@ aws s3api delete-bucket --bucket $BUCKET_NAME
 ### Security Group Drift Drill 1: Open SSH Access (IPv4)
 
 #### Step Checklist
-- ☐ Create test security group in default VPC
-- ☐ Add dangerous ingress rule (0.0.0.0/0:22) (t0)
-- ☐ Monitor CloudWatch logs for EventBridge trigger (t1)
-- ☐ Watch Lambda execution logs (t2)
-- ☐ Confirm remediation completion (t3)
-- ☐ Verify security group is secured
-- ☐ Clean up test resources
+- [ ] Create test security group in default VPC
+- [ ] Add dangerous ingress rule (0.0.0.0/0:22) (t0)
+- [ ] Monitor CloudWatch logs for EventBridge trigger (t1)
+- [ ] Watch Lambda execution logs (t2)
+- [ ] Confirm remediation completion (t3)
+- [ ] Verify security group is secured
+- [ ] Clean up test resources
 
 #### Execution Steps
 
@@ -308,10 +308,10 @@ aws logs tail /aws/lambda/driftguard-remediator-8cb448d0 --since 5m --follow
 | **MTTR** | | t3 - t0 |
 
 #### Verification Checklist
-- ☐ Dangerous 0.0.0.0/0:22 rule removed
-- ☐ Maintainer access (203.0.113.10/32:22) added
-- ☐ Maintainer access (203.0.113.10/32:3389) added
-- ☐ Security group tagged with `driftguard:quarantined=true`
+- [ ] Dangerous 0.0.0.0/0:22 rule removed
+- [ ] Maintainer access (203.0.113.10/32:22) added
+- [ ] Maintainer access (203.0.113.10/32:3389) added
+- [ ] Security group tagged with `driftguard:quarantined=true`
 
 **Verification Commands:**
 ```bash
@@ -363,13 +363,13 @@ aws ec2 delete-security-group --group-id $SG_ID
 ### Security Group Drift Drill 2: Open SSH Access (IPv6)
 
 #### Step Checklist
-- ☐ Create test security group in default VPC
-- ☐ Add dangerous IPv6 ingress rule (::/0:22) (t0)
-- ☐ Monitor CloudWatch logs for EventBridge trigger (t1)
-- ☐ Watch Lambda execution logs (t2)
-- ☐ Confirm remediation completion (t3)
-- ☐ Verify security group is secured
-- ☐ Clean up test resources
+- [ ] Create test security group in default VPC
+- [ ] Add dangerous IPv6 ingress rule (::/0:22) (t0)
+- [ ] Monitor CloudWatch logs for EventBridge trigger (t1)
+- [ ] Watch Lambda execution logs (t2)
+- [ ] Confirm remediation completion (t3)
+- [ ] Verify security group is secured
+- [ ] Clean up test resources
 
 #### Execution Steps
 
@@ -597,18 +597,18 @@ aws cloudwatch get-metric-statistics \
 ## Safety and Cleanup
 
 ### Pre-Drill Safety Checklist
-- ☐ Confirm you're in the correct AWS account
-- ☐ Verify no production resources will be affected
-- ☐ Use unique naming for test resources
-- ☐ Have rollback procedures ready
-- ☐ Document all test resource names
+- [ ] Confirm you're in the correct AWS account
+- [ ] Verify no production resources will be affected
+- [ ] Use unique naming for test resources
+- [ ] Have rollback procedures ready
+- [ ] Document all test resource names
 
 ### Post-Drill Cleanup Checklist
-- ☐ Delete all test S3 buckets
-- ☐ Delete all test security groups
-- ☐ Verify no test resources remain
-- ☐ Check for any orphaned resources
-- ☐ Confirm account is clean
+- [ ] Delete all test S3 buckets
+- [ ] Delete all test security groups
+- [ ] Verify no test resources remain
+- [ ] Check for any orphaned resources
+- [ ] Confirm account is clean
 
 ### Emergency Rollback Procedures
 
