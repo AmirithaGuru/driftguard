@@ -1,6 +1,7 @@
 # DriftGuard Metrics Collection
 
-This module collects and analyzes metrics from the DriftGuard platform to generate KPI reports for security posture monitoring and performance tracking.
+This module collects and analyzes metrics from the DriftGuard platform to generate KPI reports for
+security posture monitoring and performance tracking.
 
 ## Quick Start
 
@@ -25,14 +26,14 @@ cat metrics.md
 
 Place your data files in `/metrics/input/`:
 
-| File | Purpose | Format |
-|------|---------|--------|
-| `ci_runs.json` | GitHub Actions CI results | JSON array |
-| `drift_timestamps.csv` | Drift simulation timestamps | CSV |
-| `cloudwatch_logs.jsonl` | CloudWatch log exports | JSON Lines |
-| `checkov_baseline.json` | Pre-gate Checkov scan | Checkov JSON |
-| `checkov_post.json` | Post-gate Checkov scan | Checkov JSON |
-| `loc.json` | Lines of code data | JSON |
+| File                    | Purpose                     | Format       |
+| ----------------------- | --------------------------- | ------------ |
+| `ci_runs.json`          | GitHub Actions CI results   | JSON array   |
+| `drift_timestamps.csv`  | Drift simulation timestamps | CSV          |
+| `cloudwatch_logs.jsonl` | CloudWatch log exports      | JSON Lines   |
+| `checkov_baseline.json` | Pre-gate Checkov scan       | Checkov JSON |
+| `checkov_post.json`     | Post-gate Checkov scan      | Checkov JSON |
+| `loc.json`              | Lines of code data          | JSON         |
 
 ## Output
 
@@ -64,6 +65,7 @@ python3 collect.py --out custom/metrics.md
 ## Integration
 
 This tool is designed to integrate with:
+
 - GitHub Actions CI/CD pipelines
 - DriftGuard Step 5 simulation playbooks
 - Checkov security scanning workflows

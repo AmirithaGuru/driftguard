@@ -1,97 +1,160 @@
-# 🛡️ DriftGuard: Policy-Gated IaC + Auto-Remediation
+# DriftGuard: Policy-Gated Infrastructure as Code with Automated Remediation
 
-**DriftGuard** is a guardrails-as-code platform for AWS that enforces security policies at two critical checkpoints: **pre-merge prevention** using OPA/Rego policies on `terraform plan` JSON to block risky infrastructure changes in CI, and **near real-time auto-remediation** via CloudTrail → EventBridge → Lambda to detect and fix manual drift within seconds. The platform emits structured JSON logs and custom CloudWatch metrics (MTTD, MTTR, prevention rates) and optionally publishes findings to Security Hub, giving teams both proactive gates and reactive guardrails with full observability.
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  PREVENTION (Pre-Merge)                                                 │
-│                                                                          │
-│  Developer → PR → GitHub Actions CI                                     │
-│                    │                                                     │
-│                    ├─→ terraform plan -out=plan.bin                     │
-│                    ├─→ terraform show -json plan.bin > plan.json       │
-│                    ├─→ conftest test plan.json -p policy/              │
-│                    │   (OPA/Rego: C1..C5 controls + exceptions.yaml)   │
-│                    ├─→ checkov -d infra --compact                       │
-│                    │                                                     │
-│                    └─→ ✅ PASS → Merge  |  ❌ FAIL → Block PR           │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│  AUTO-REMEDIATION (Post-Deployment Drift)                               │
-│                                                                          │
-│  Manual Console Change → CloudTrail (Management Events)                 │
-│           │                                                              │
-│           └─→ EventBridge Rule                                          │
-│                (PutBucketAcl, PutBucketPolicy, AuthorizeSecurityGroup*) │
-│                    │                                                     │
-│                    └─→ Lambda (Python 3.11 remediator)                  │
-│                         ├─→ S3 Playbook:                                │
-│                         │    - Enable Public Access Block (all 4 flags) │
-│                         │    - Sanitize bucket policy (remove public)   │
-│                         │    - Tag: driftguard:remediated=true          │
-│                         │                                                │
-│                         ├─→ SG Playbook:                                │
-│                         │    - Revoke 0.0.0.0/0 on ports 22/3389        │
-│                         │    - Add maintainer /32 CIDR                  │
-│                         │    - Tag: driftguard:quarantined=true         │
-│                         │                                                │
-│                         ├─→ CloudWatch Logs (structured JSON)           │
-│                         ├─→ CloudWatch Metrics (MTTD, MTTR, Success)    │
-│                         └─→ Security Hub (optional findings)            │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│  OBSERVABILITY                                                           │
-│                                                                          │
-│  CloudWatch Logs Insights → Query structured JSON logs                  │
-│  CloudWatch Metrics → RemediationSuccess, RemediationLatencyMs          │
-│  Security Hub → Aggregated findings dashboard                           │
-│  /metrics/collect.py → KPI reports (prevention rate, MTTD/MTTR p50/p95) │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+DriftGuard is a guardrails-as-code platform for AWS that enforces security policies at two critical
+checkpoints: pre-merge prevention using OPA/Rego policies on Terraform plan JSON to block risky
+infrastructure changes in CI/CD pipelines, and near real-time auto-remediation via CloudTrail,
+EventBridge, and Lambda to detect and correct manual drift within seconds. The platform emits
+structured JSON logs and custom CloudWatch metrics (MTTD, MTTR, prevention rates) and optionally
+publishes findings to Security Hub, providing teams with both proactive gates and reactive
+guardrails with full observability.
 
 ---
 
-## 🔒 Enforced Security Controls
+## Architecture
+
+```text
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         LAYER 1: PREVENTION (Pre-Merge)                   │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   Developer  ──>  Pull Request  ──>  GitHub Actions CI                   │
+│                                            │                              │
+│                                            ├──> terraform plan            │
+│                                            │                              │
+│                                            ├──> terraform show -json      │
+│                                            │                              │
+│                                            ├──> conftest test             │
+│                                            │    (OPA/Rego policies)       │
+│                                            │    • C1: S3 PAB              │
+│                                            │    • C2: SG Ingress          │
+│                                            │    • C3: KMS Encryption      │
+│                                            │    • C4: CloudTrail          │
+│                                            │    • C5: IAM Least-Privilege │
+│                                            │                              │
+│                                            ├──> checkov scan              │
+│                                            │                              │
+│                                            ▼                              │
+│                                   ┌────────────────┐                     │
+│                                   │  PASS → Merge  │                     │
+│                                   │  FAIL → Block  │                     │
+│                                   └────────────────┘                     │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│              LAYER 2: AUTO-REMEDIATION (Post-Deployment Drift)            │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   Manual AWS Console Change                                              │
+│              │                                                            │
+│              ▼                                                            │
+│        CloudTrail (Management Events)                                    │
+│              │                                                            │
+│              │  Event Names:                                             │
+│              │  • PutBucketAcl                                           │
+│              │  • PutBucketPolicy                                        │
+│              │  • DeleteBucketPolicy                                     │
+│              │  • PutPublicAccessBlock                                   │
+│              │  • DeletePublicAccessBlock                                │
+│              │  • AuthorizeSecurityGroupIngress                          │
+│              │                                                            │
+│              ▼                                                            │
+│        EventBridge Rule  ──>  Lambda Function (Python 3.11)              │
+│                                     │                                     │
+│                    ┌────────────────┴────────────────┐                   │
+│                    │                                 │                   │
+│                    ▼                                 ▼                   │
+│              S3 Playbook                       SG Playbook               │
+│              ├─ Enable PAB (4 flags)           ├─ Revoke 0.0.0.0/0      │
+│              ├─ Sanitize policy                ├─ Add maintainer CIDR    │
+│              └─ Tag: remediated=true           └─ Tag: quarantined=true  │
+│                    │                                 │                   │
+│                    └────────────────┬────────────────┘                   │
+│                                     │                                     │
+│                                     ▼                                     │
+│                         ┌───────────────────────┐                        │
+│                         │  Emit Logs & Metrics  │                        │
+│                         └───────────────────────┘                        │
+│                                     │                                     │
+│                    ┌────────────────┼────────────────┐                   │
+│                    │                │                │                   │
+│                    ▼                ▼                ▼                   │
+│            CloudWatch Logs   CloudWatch Metrics  Security Hub            │
+│            (Structured JSON)  (MTTD, MTTR)       (Findings)              │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│                       LAYER 3: OBSERVABILITY & REPORTING                  │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│   CloudWatch Logs Insights  ──>  Query structured JSON logs              │
+│                                                                           │
+│   CloudWatch Metrics        ──>  RemediationSuccess                      │
+│                                   RemediationFailure                      │
+│                                   RemediationLatencyMs                    │
+│                                                                           │
+│   Security Hub              ──>  Aggregated findings dashboard           │
+│                                                                           │
+│   metrics/collect.py        ──>  KPI reports (Prevention Rate,           │
+│                                   False Positives, MTTD/MTTR p50/p95)    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Enforced Security Controls
 
 DriftGuard implements **five critical security controls** validated in CI and enforced at runtime:
 
-- **C1: S3 Public Access Block** — All S3 buckets must have Public Access Block enabled (all 4 flags: `BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`). Bucket policies with `"Principal": "*"` are denied unless explicitly waived.
+- **C1: S3 Public Access Block** — All S3 buckets must have Public Access Block enabled (all 4
+  flags: `BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`).
+  Bucket policies with `"Principal": "*"` are denied unless explicitly waived.
 
-- **C2: Security Group Ingress Restrictions** — Denies security groups with `0.0.0.0/0` or `::/0` on high-risk ports (22 SSH, 3389 RDP) or protocol `-1` (all traffic). Only specific maintainer CIDRs are allowed.
+- **C2: Security Group Ingress Restrictions** — Denies security groups with `0.0.0.0/0` or `::/0` on
+  high-risk ports (22 SSH, 3389 RDP) or protocol `-1` (all traffic). Only specific maintainer CIDRs
+  are allowed.
 
-- **C3: Encryption at Rest (KMS)** — Requires KMS-based encryption for S3 buckets, EBS volumes, and RDS instances. Default AWS-managed keys (AES256) are rejected in favor of customer-managed KMS keys for auditability.
+- **C3: Encryption at Rest (KMS)** — Requires KMS-based encryption for S3 buckets, EBS volumes, and
+  RDS instances. Default AWS-managed keys (AES256) are rejected in favor of customer-managed KMS
+  keys for auditability.
 
-- **C4: CloudTrail Baseline** — Enforces at least one multi-region CloudTrail with log file validation enabled. Trail log buckets must have Public Access Block enabled and must not have public bucket policies.
+- **C4: CloudTrail Baseline** — Enforces at least one multi-region CloudTrail with log file
+  validation enabled. Trail log buckets must have Public Access Block enabled and must not have
+  public bucket policies.
 
-- **C5: IAM Least-Privilege** — Blocks IAM policies with `Action: "*"` + `Resource: "*"` combinations or wildcard actions on sensitive namespaces (`iam:*`, `kms:*`, `sts:*`) with `Resource: "*"`. Requires scoped permissions.
+- **C5: IAM Least-Privilege** — Blocks IAM policies with `Action: "*"` + `Resource: "*"`
+  combinations or wildcard actions on sensitive namespaces (`iam:*`, `kms:*`, `sts:*`) with
+  `Resource: "*"`. Requires scoped permissions.
 
 ---
 
-## 🤖 Automated Remediation Playbooks
+## Automated Remediation Playbooks
 
 DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by CloudTrail events:
 
 ### S3 Playbook (Public Bucket Detection)
-**Trigger Events**: `PutBucketAcl`, `PutBucketPolicy`, `DeleteBucketPolicy`, `PutPublicAccessBlock`, `DeletePublicAccessBlock`
+
+**Trigger Events**: `PutBucketAcl`, `PutBucketPolicy`, `DeleteBucketPolicy`, `PutPublicAccessBlock`,
+`DeletePublicAccessBlock`
 
 **Actions**:
+
 1. Call `s3control:PutPublicAccessBlock` to enforce all 4 PAB flags
-2. Retrieve and sanitize bucket policy: remove any statements with `"Principal": "*"` allowing public access
+2. Retrieve and sanitize bucket policy: remove any statements with `"Principal": "*"` allowing
+   public access
 3. Apply tag `driftguard:remediated=true` with timestamp
 4. Emit structured log and CloudWatch metric `RemediationSuccess` or `RemediationFailure`
 
 **MTTR Target**: < 15 seconds (p95)
 
 ### Security Group Playbook (Open Ingress Detection)
+
 **Trigger Events**: `AuthorizeSecurityGroupIngress`
 
 **Actions**:
+
 1. Describe security group to identify risky ingress rules
 2. Revoke any rules with `0.0.0.0/0` or `::/0` on ports 22, 3389, or protocol `-1`
 3. Authorize maintainer CIDR (from `MAINTAINER_CIDR` env var) on ports 22 and 3389
@@ -102,20 +165,22 @@ DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by Cl
 
 ---
 
-## 📊 Current Performance Metrics
+## Current Performance Metrics
 
-| KPI | Value |
-|-----|-------|
-| **Prevention Rate** | 100.0% (2/2) |
-| **False-Positive %** | N/A (0/1) |
-| **CI Overhead p50/p95 (s)** | 42.1 / 45.3 |
-| **MTTD p50/p95 (s)** | 45.1 / 45.1 |
-| **MTTR p50/p95 (s)** | 27.7 / 27.7 |
-| **High/Critical Density** | 0.16 → 0.00 (-0.16) |
+| KPI                         | Value               |
+| --------------------------- | ------------------- |
+| **Prevention Rate**         | 100.0% (2/2)        |
+| **False-Positive %**        | N/A (0/1)           |
+| **CI Overhead p50/p95 (s)** | 42.1 / 45.3         |
+| **MTTD p50/p95 (s)**        | 45.1 / 45.1         |
+| **MTTR p50/p95 (s)**        | 27.7 / 27.7         |
+| **High/Critical Density**   | 0.16 → 0.00 (-0.16) |
 
-> **Note**: Metrics generated from simulation data. Run `python3 metrics/collect.py` after collecting real CI and drift data.
+> **Note**: Metrics generated from simulation data. Run `python3 metrics/collect.py` after
+> collecting real CI and drift data.
 
 **Metric Definitions**:
+
 - **Prevention Rate**: % of bad PRs blocked by CI security checks
 - **False-Positive %**: % of good PRs incorrectly flagged
 - **CI Overhead**: Time spent on security validation (p50/p95)
@@ -125,7 +190,7 @@ DriftGuard's Lambda remediator executes **idempotent playbooks** triggered by Cl
 
 ---
 
-## 🎬 How to Demo
+## Demonstration Guide
 
 ### Prerequisites
 
@@ -164,7 +229,7 @@ resource "aws_security_group" "demo_bad" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # ❌ VIOLATION: C2 control
+    cidr_blocks = ["0.0.0.0/0"]  # VIOLATION: C2 control
   }
 
   tags = var.default_tags
@@ -294,7 +359,7 @@ aws s3api put-bucket-policy \
   --bucket "$TEST_BUCKET" \
   --policy file:///tmp/public-policy.json
 
-# ⏱️ WATCH: DriftGuard should remediate in ~30-60 seconds
+# WATCH: DriftGuard should remediate in approximately 30-60 seconds
 
 # Monitor Lambda logs in real-time
 aws logs tail /aws/lambda/driftguard-remediator \
@@ -339,7 +404,7 @@ aws ec2 authorize-security-group-ingress \
   --port 22 \
   --cidr 0.0.0.0/0
 
-# ⏱️ WATCH: DriftGuard should remediate in ~30-60 seconds
+# WATCH: DriftGuard should remediate in approximately 30-60 seconds
 
 # Monitor logs
 aws logs tail /aws/lambda/driftguard-remediator \
@@ -395,9 +460,9 @@ aws securityhub get-findings \
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
-```
+```text
 driftguard/
 ├── README.md                        # This file
 ├── .github/
@@ -439,11 +504,12 @@ driftguard/
 
 ---
 
-## ⚠️ Safety and Cost Considerations
+## Safety and Cost Considerations
 
 ### Sandbox-Only Deployment
 
-**WARNING**: DriftGuard is designed for **non-production sandbox accounts** during initial deployment and testing.
+**WARNING**: DriftGuard is designed for **non-production sandbox accounts** during initial
+deployment and testing.
 
 - Lambda has **write permissions** to modify S3 buckets and security groups automatically
 - Auto-remediation can cause service disruptions if misconfigured
@@ -453,17 +519,18 @@ driftguard/
 
 Estimated monthly costs for a low-traffic deployment (us-east-1):
 
-| Service | Usage | Cost |
-|---------|-------|------|
-| CloudTrail | Management events only (first trail free) | $0 |
-| Lambda | ~100 invocations/month @ 256MB, 10s avg | ~$0.01 |
-| CloudWatch Logs | ~1GB ingestion + 30-day retention | ~$0.50 |
-| EventBridge | ~100 events/month | $0.00 |
-| GuardDuty | Continuous threat detection | ~$4.50/month |
-| Security Hub | 10,000 checks/month (first 10k free) | $0 |
-| **Total** | | **~$5/month** |
+| Service         | Usage                                     | Cost          |
+| --------------- | ----------------------------------------- | ------------- |
+| CloudTrail      | Management events only (first trail free) | $0            |
+| Lambda          | ~100 invocations/month @ 256MB, 10s avg   | ~$0.01        |
+| CloudWatch Logs | ~1GB ingestion + 30-day retention         | ~$0.50        |
+| EventBridge     | ~100 events/month                         | $0.00         |
+| GuardDuty       | Continuous threat detection               | ~$4.50/month  |
+| Security Hub    | 10,000 checks/month (first 10k free)      | $0            |
+| **Total**       |                                           | **~$5/month** |
 
 **To minimize costs**:
+
 - Use CloudWatch Logs retention policies (default: 30 days)
 - Consider disabling GuardDuty and Security Hub in test environments
 - Delete S3 test buckets and security groups after each drill
@@ -503,7 +570,7 @@ aws events enable-rule --name driftguard-remediation-trigger
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone and Setup
 
@@ -575,38 +642,41 @@ cat metrics.md
 
 ---
 
-## 📚 Further Reading
+## Further Reading
 
 - **Policy Development**: See `policy/README.md` for writing custom Rego rules and testing
-- **Simulation Playbooks**: See `sim/PR-cases.md` and `sim/drift-cases.md` for comprehensive test scenarios
+- **Simulation Playbooks**: See `sim/PR-cases.md` and `sim/drift-cases.md` for comprehensive test
+  scenarios
 - **Metrics Collection**: See `metrics/README.md` for KPI definitions and data sources
 - **Lambda Internals**: See `infra/lambda/remediator.py` for playbook implementation details
 - **CI/CD Integration**: See `.github/workflows/security.yml` for GitHub Actions configuration
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 DriftGuard is a reference implementation for guardrails-as-code patterns. Contributions welcome:
 
-1. **New Policies**: Add Rego rules for additional AWS services (RDS encryption, VPC flow logs, etc.)
+1. **New Policies**: Add Rego rules for additional AWS services (RDS encryption, VPC flow logs,
+   etc.)
 2. **New Playbooks**: Extend Lambda remediator for EBS, RDS, IAM drift scenarios
 3. **Enhanced Metrics**: Add support for Prometheus/Grafana exports
 4. **Documentation**: Add screenshots, architecture diagrams, or video walkthroughs
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with:
+
 - **Terraform** for infrastructure as code
-- **OPA/Conftest** for policy-as-code enforcement  
+- **OPA/Conftest** for policy-as-code enforcement
 - **Checkov** for static IaC security scanning
 - **AWS CloudTrail** for management event detection
 - **AWS EventBridge** for event routing
@@ -614,7 +684,3 @@ Built with:
 - **Python 3.11** and **Boto3** for AWS SDK integration
 
 Inspired by AWS Well-Architected Security Pillar and DevSecOps best practices.
-
----
-
-**Built with ❤️ for secure, automated AWS infrastructure management.**

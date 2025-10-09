@@ -7,15 +7,18 @@ This directory contains screenshots and diagrams for the DriftGuard README and d
 The following screenshots should be captured during demo runs:
 
 ### 1. `pr-fail.png`
+
 **Capture**: GitHub Actions CI workflow showing a failed security check
 
 **What to show**:
-- Red ❌ status on PR
+
+- Failed status indicator on pull request
 - Conftest output showing policy violation (e.g., "Security Group allows 0.0.0.0/0 on port 22")
 - Checkov findings highlighting High/Critical issues
-- PR merge blocked by required status check
+- Pull request merge blocked by required status check
 
 **How to capture**:
+
 1. Create a branch with a risky Terraform change (e.g., open security group)
 2. Push to GitHub to trigger CI workflow
 3. Navigate to the PR and click on "Details" for the failed check
@@ -24,15 +27,18 @@ The following screenshots should be captured during demo runs:
 ---
 
 ### 2. `exception-waiver.png`
+
 **Capture**: GitHub Actions CI workflow showing a passing check with policy exception
 
 **What to show**:
-- Green ✅ status on PR
+
+- Passing status indicator on pull request
 - Conftest output mentioning exception ID (e.g., "EX-DEMO-001")
 - Warning message about time-boxed waiver
-- PR allowed to merge with exception noted
+- Pull request allowed to merge with exception noted
 
 **How to capture**:
+
 1. Add an exception to `policy/exceptions.yaml`
 2. Create matching Terraform resource with exception ID
 3. Push to GitHub and screenshot the passing workflow
@@ -41,9 +47,11 @@ The following screenshots should be captured during demo runs:
 ---
 
 ### 3. `lambda-logs.png`
+
 **Capture**: CloudWatch Logs showing structured JSON remediation logs
 
 **What to show**:
+
 - Lambda function logs in CloudWatch console
 - Structured JSON log entries with fields:
   - `"level": "INFO"`
@@ -54,6 +62,7 @@ The following screenshots should be captured during demo runs:
 - Timestamp showing near real-time response (< 60s)
 
 **How to capture**:
+
 1. Simulate drift (make an S3 bucket public or add open SG rule)
 2. Wait ~30-60 seconds for Lambda to execute
 3. Navigate to CloudWatch Logs console
@@ -63,9 +72,11 @@ The following screenshots should be captured during demo runs:
 ---
 
 ### 4. `metrics-table.png`
+
 **Capture**: KPI metrics from metrics.md or CloudWatch dashboard
 
 **What to show**:
+
 - Markdown table from `metrics/metrics.md` showing:
   - Prevention Rate: X% (blocked/total)
   - False-Positive %: X%
@@ -75,11 +86,13 @@ The following screenshots should be captured during demo runs:
   - Security Density change
 
 **Alternative**: CloudWatch dashboard with custom metrics:
+
 - Line charts for `RemediationLatencyMs` (p50/p95)
 - Bar chart for `RemediationSuccess` vs `RemediationFailure` counts
 - Time series showing trend over multiple drift simulations
 
 **How to capture**:
+
 1. After running multiple drift simulations, run `python3 metrics/collect.py`
 2. Screenshot the generated `metrics.md` table
 3. Or create a CloudWatch dashboard and screenshot the metrics charts
@@ -87,9 +100,11 @@ The following screenshots should be captured during demo runs:
 ---
 
 ### 5. `security-hub-finding.png` (Optional)
+
 **Capture**: AWS Security Hub console showing DriftGuard findings
 
 **What to show**:
+
 - Security Hub findings list filtered for DriftGuard
 - Finding details showing:
   - Title: "DriftGuard: Auto-remediated ..."
@@ -99,6 +114,7 @@ The following screenshots should be captured during demo runs:
   - Remediation timestamp
 
 **How to capture**:
+
 1. Ensure `ENABLE_SECURITY_HUB=true` in Lambda environment variables
 2. Simulate drift and wait for remediation
 3. Navigate to Security Hub console
@@ -119,11 +135,13 @@ The following screenshots should be captured during demo runs:
 ## Architecture Diagrams
 
 Additional diagrams can be added here:
+
 - `architecture-detailed.png`: Expanded architecture with all AWS services
 - `policy-flow.png`: Flowchart of policy evaluation logic
 - `remediation-flow.png`: Sequence diagram for drift detection → remediation
 
 These can be created using tools like:
+
 - **Draw.io** (free, web-based)
 - **Lucidchart** (collaborative diagramming)
 - **PlantUML** (text-based UML diagrams)
@@ -131,4 +149,5 @@ These can be created using tools like:
 
 ---
 
-**Note**: All screenshots should be captured in a **sandbox AWS account** with no sensitive data visible (account IDs, resource names, etc. can be sanitized if needed).
+**Note**: All screenshots should be captured in a sandbox AWS account with no sensitive data
+visible. Account IDs, resource names, and other identifying information can be sanitized if needed.
